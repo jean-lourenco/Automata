@@ -1,1 +1,1 @@
-# Snaker
+# Automata
