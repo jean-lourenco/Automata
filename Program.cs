@@ -1,41 +1,47 @@
 ﻿using System.Numerics;
+using System.Security;
 using Raylib_cs;
 using static Raylib_cs.Raylib;
 
-InitWindow(600, 600, "Snaker");
+const int winWidth = 2700;
+const int cellWidth = 5;
+
+InitWindow(winWidth, winWidth, "Automata");
+ClearBackground(Color.WHITE);
 SetTargetFPS(60);
-var rect = new Vector2(0, 0);
-var lastKey = KeyboardKey.KEY_RIGHT;
+
+// Mais interessantes:
+// 73, 110, 18, 57, 182, 105, 137, 30, 89
+var rule = 89;
+var ruleSet = Convert.ToString(rule, 2).PadLeft(8, '0');
+var currentLine = 0;
+var board = new int[winWidth / cellWidth];
+var newLine = new int[winWidth / cellWidth];
+board[winWidth / cellWidth / 2] = 1;
 
 while (!WindowShouldClose())
 {
-    ClearBackground(Color.BLACK);
     BeginDrawing();
-    DrawFPS(0, 600 - 20);
-    DrawRectangle((int)rect.X, (int)rect.Y, 10, 10, Color.GREEN);
+    for (var i = 0; i < board.Length; i++)
+    {
+        if (board[i] == 1)
+            DrawRectangle(i * cellWidth, cellWidth * currentLine, cellWidth, cellWidth, Color.BLACK);
 
-    if (IsKeyDown(KeyboardKey.KEY_UP))
-    {
-        rect.Y -= GetFrameTime() * 20;
-        lastKey = KeyboardKey.KEY_UP;
+        var before = i <= 0 ? board.Length - 1 : i - 1;
+        var next = i >= board.Length - 1 ? 0 : i + 1;
+        var state = CalcStateFromNeighbours(board[before], board[i], board[next]);
+        newLine[i] = state;
     }
-    else if (IsKeyDown(KeyboardKey.KEY_RIGHT))
-    {
-        rect.X += GetFrameTime() * 20;
-        lastKey = KeyboardKey.KEY_RIGHT;
-    }
-    else if (IsKeyDown(KeyboardKey.KEY_DOWN))
-    {
-        rect.Y += GetFrameTime() * 20;
-        lastKey = KeyboardKey.KEY_DOWN;
-    }
-    else if (IsKeyDown(KeyboardKey.KEY_LEFT))
-    {
-        rect.X -= GetFrameTime() * 20;
-        lastKey = KeyboardKey.KEY_LEFT;
-    }
-
+    board = (int[])newLine.Clone();
+    currentLine++;
     EndDrawing();
+    Thread.Sleep(10);
 }
 
 CloseWindow();
+
+int CalcStateFromNeighbours(int a, int b, int c)
+{
+    var neighbours = 7 - Convert.ToInt32($"{a}{b}{c}", 2);
+    return ruleSet[neighbours] - '0';
+}
